@@ -1,16 +1,19 @@
 #include <stdio.h>         // printf() and standard i/o functions.
 #include <sys/socket.h>    // socket()
 #include <arpa/inet.h>     // uint16_t htons()
-//#include <stdlib.h>
-#include <string.h>
+#include <stdlib.h>        // atoi()
 #include <netinet/in.h>    // struct soccaddr_in
 #include <unistd.h>        // close() to close socket.
-#include <string.h>        // strlen()
+#include <string.h>        // strlen(), strstr()
+#include <stddef.h>        // size_t type
 
-#define PORT 80
-#define IP "129.128.5.194"
+/*
+ * TODO
+ * - create with command line for port and IP.
+ * - create with host lookup.
+*/
 
-int main()
+int main(int argc, char *argv[])
 {
    //uint16_t port = 80;
    char *get_msg;
@@ -18,17 +21,26 @@ int main()
    int sock;
    int result;
    int i;
-   //int total;
+   unsigned int port;
    struct sockaddr_in name;
 
    char server_reply[200000] = {0};
    char link_marker[2] = "<a";
 
+   if ( argc != 3 )
+   {
+      printf("Usage: scan_links <server_ip> <port>\n");
+      return -1;
+   }
+
+   inet_aton(argv[1], &name.sin_addr);
+   port = atoi(argv[2]);
+
    //get_msg = "HEAD / HTTP/1.1\r\nHost: www.example.com\r\n\r\n";
    get_msg = "GET / HTTP/1.1\r\nHost:www.openbsd.org\r\nConnection:close\r\n\r\n";
    name.sin_family = AF_INET;
-   name.sin_port = htons(PORT);
-   name.sin_addr.s_addr = inet_addr(IP);
+   name.sin_port = htons(port);
+   //name.sin_addr.s_addr = &ip;
    
    if ( (sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
       puts("Socket Creation Failed!");
