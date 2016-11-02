@@ -1,3 +1,10 @@
+/*
+ * TODO
+ * - create with host lookup.
+*/
+
+/* Include headers */
+#include <ctype.h>         // tolower()
 #include <stdio.h>         // printf() and standard i/o functions.
 #include <sys/socket.h>    // socket()
 #include <arpa/inet.h>     // uint16_t htons()
@@ -7,19 +14,16 @@
 #include <string.h>        // strlen(), strstr()
 #include <stddef.h>        // size_t type
 
+/* Define constants */
 #define MAXBUFFER 200000
 
-/*
- * TODO
- * - create with host lookup.
-*/
-
+/* Define functions */
 int remove_white_space(char from[], char to[]);
+int find_links(char buff[]);
 
 int main(int argc, char *argv[])
 {
    char *get_msg;
-   //char *foo;
    int sock;
    int result;
    //int i;
@@ -28,7 +32,6 @@ int main(int argc, char *argv[])
 
    char server_reply[MAXBUFFER] = {0};
    char stripped_buff[MAXBUFFER] = {0};
-   //char link_marker[2] = "<a";
 
    if ( argc != 3 )
    {
@@ -80,9 +83,11 @@ int main(int argc, char *argv[])
       puts("Remove White Space Failed!");
    puts("White Space Removed");
 
-   puts("stripped buff is:");
-   printf("%s\n", stripped_buff);
    
+   puts("find links");
+   if ( (find_links(stripped_buff)) < 0)
+      puts("Find Links Failed!");
+   puts("\nFind Links Done");
 
 /*
    printf("\nFirst 1000 bytes\n\n");
@@ -92,12 +97,7 @@ int main(int argc, char *argv[])
    printf("\n\nTotal bytes received: %lu\n\n", strlen(server_reply));
 
 
-   foo = strstr(server_reply, link_marker);
 
-   printf("found: ");
-   for (i=0;foo[i] != '>';i++)
-      printf("%c", foo[i]);
-   printf("%c", foo[i]);
 
    remove_white_space(server_reply, stripped_buff);
 
@@ -107,6 +107,40 @@ int main(int argc, char *argv[])
    return 0;
 }
 
+
+int find_links(char buff[])
+{
+   char *pos = buff;
+   char link_marker[7] = "ahref=\"";
+   int i = 0;
+
+   // pos is pointer to start of ahref=" string. Returns NULL if not found.
+   while ( (pos = strstr(pos, link_marker)) )
+   {
+      // Increase size of marker so we don't loop forever.
+      pos += 7;
+      i = 0;      // start at 0 since this is the start of pos.
+
+      printf("found link:  ");
+      while ( pos[i] != '\"' && pos[i] != '\0' )
+      {
+         printf("%c", pos[i]);
+         i++;
+      }
+
+      printf("\n");
+
+      // start at 7 to get to start of link.
+      //for (i=7;pos[i] != '\"';i++)
+         //printf("%c", pos[i]);
+   }
+
+/*
+   for ( i = 7; buff[i] != '\0' && i < MAXBUFFER; i++)
+*/
+
+   return 0;
+}
 
 int remove_white_space(char from[], char to[])
 {
@@ -119,7 +153,7 @@ int remove_white_space(char from[], char to[])
       else
       {
          //printf("char is: %c and code is %d\n", from[from_pos], from[from_pos]);
-         to[to_pos++] = from[from_pos++];
+         to[to_pos++] = tolower(from[from_pos++]);
       }
 
    return 0;
