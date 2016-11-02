@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
    puts("White Space Removed");
 
    puts("stripped buff is:");
-   printf("%s\n\n", stripped_buff);
+   printf("%s\n", stripped_buff);
    
 
 /*
@@ -110,6 +110,17 @@ int main(int argc, char *argv[])
 
 int remove_white_space(char from[], char to[])
 {
+   int from_pos = 0;
+   int to_pos = 0;
+
+   while (from[from_pos] != '\0')
+      if (from[from_pos] == ' ' || from[from_pos] == '\r' || from[from_pos] == '\n' || from[from_pos] == '\t' || from[from_pos] == '\f')
+         from_pos++;
+      else
+      {
+         //printf("char is: %c and code is %d\n", from[from_pos], from[from_pos]);
+         to[to_pos++] = from[from_pos++];
+      }
 
    return 0;
 }
