@@ -7,25 +7,28 @@
 #include <string.h>        // strlen(), strstr()
 #include <stddef.h>        // size_t type
 
+#define MAXBUFFER 200000
+
 /*
  * TODO
- * - create with command line for port and IP.
  * - create with host lookup.
 */
 
+int remove_white_space(char from[], char to[]);
+
 int main(int argc, char *argv[])
 {
-   //uint16_t port = 80;
    char *get_msg;
-   char *foo;
+   //char *foo;
    int sock;
    int result;
-   int i;
+   //int i;
    unsigned int port;
    struct sockaddr_in name;
 
-   char server_reply[200000] = {0};
-   char link_marker[2] = "<a";
+   char server_reply[MAXBUFFER] = {0};
+   char stripped_buff[MAXBUFFER] = {0};
+   //char link_marker[2] = "<a";
 
    if ( argc != 3 )
    {
@@ -33,20 +36,22 @@ int main(int argc, char *argv[])
       return -1;
    }
 
-   inet_aton(argv[1], &name.sin_addr);
+   // get the port.
    port = atoi(argv[2]);
 
-   //get_msg = "HEAD / HTTP/1.1\r\nHost: www.example.com\r\n\r\n";
-   get_msg = "GET / HTTP/1.1\r\nHost:www.openbsd.org\r\nConnection:close\r\n\r\n";
+   // fill the sockaddr_in struct.
    name.sin_family = AF_INET;
    name.sin_port = htons(port);
-   //name.sin_addr.s_addr = &ip;
+   inet_aton(argv[1], &name.sin_addr);
+
+   //get_head = "HEAD / HTTP/1.1\r\nHost: www.example.com\r\n\r\n";
+   get_msg = "GET / HTTP/1.1\r\nHost:www.openbsd.org\r\nConnection:close\r\n\r\n";
    
    if ( (sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
       puts("Socket Creation Failed!");
    puts("Socket Created");
 
-   sleep(2);
+   sleep(1);
 
    if ( (connect(sock, (struct sockaddr *)&name, sizeof(name))) < 0)
       puts("Connect Failed!");
@@ -56,31 +61,34 @@ int main(int argc, char *argv[])
       puts("Send Failed!");
    puts("Data Sent, ready to recv.");
 
-   sleep(2);
-   //while ( (recv(sock, server_reply, 2000, MSG_WAITALL)) > 0)
+   sleep(1);
+
+   // Keep getting recv until we get all the bytes.
    while ( (result = recv(sock, server_reply, 200000, 0)) > 0)
    {
-      //if ( (recv(sock, server_reply, 2000, 0)) < 0)
       puts("Data Received");
       printf("Bytes Received = %d\n", result);
-      //printf("data = %s\n\n", server_reply);
    }
 
-   sleep(2);
+   sleep(1);
    if ( (close(sock)) < 0)
       puts("Close Socket Failed!");
    puts("Socket Closed");
 
-   //puts("Message =");
-   //printf("%s \n\nDONE\n\n\n", server_reply);
-   //printf("%s", server_reply);
+   puts("Removing White Space");
+   if ( (remove_white_space(server_reply, stripped_buff) < 0))
+      puts("Remove White Space Failed!");
+   puts("White Space Removed");
 
+   puts("stripped buff is:");
+   printf("%s\n\n", stripped_buff);
+   
+
+/*
    printf("\nFirst 1000 bytes\n\n");
    for (i=0; i<1000; i++)
       printf("%c", server_reply[i]);
 
-   //for (total=0; server_reply[total] != 0; total++)
-      //; //printf(".");
    printf("\n\nTotal bytes received: %lu\n\n", strlen(server_reply));
 
 
@@ -91,8 +99,17 @@ int main(int argc, char *argv[])
       printf("%c", foo[i]);
    printf("%c", foo[i]);
 
-   printf("\n\n\n------END------\n\n");
+   remove_white_space(server_reply, stripped_buff);
 
+   printf("\n\n\n------END------\n\n");
+*/
+
+   return 0;
+}
+
+
+int remove_white_space(char from[], char to[])
+{
 
    return 0;
 }
