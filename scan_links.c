@@ -24,6 +24,7 @@ int find_links(char buff[]);
 int main(int argc, char *argv[])
 {
    char *get_msg;
+   char *hostname;
    int sock;
    int result;
    //int i;
@@ -42,10 +43,15 @@ int main(int argc, char *argv[])
    // get the port.
    port = atoi(argv[2]);
 
+   if ( strlen(argv[1]) > 2000 )
+      hostname = argv[1];
+   else
+      printf("hostname too long!");
+
    // fill the sockaddr_in struct.
    name.sin_family = AF_INET;
    name.sin_port = htons(port);
-   inet_aton(argv[1], &name.sin_addr);
+   //inet_aton(argv[1], &name.sin_addr);
 
    //get_head = "HEAD / HTTP/1.1\r\nHost: www.example.com\r\n\r\n";
    get_msg = "GET / HTTP/1.1\r\nHost:www.openbsd.org\r\nConnection:close\r\n\r\n";
@@ -84,7 +90,7 @@ int main(int argc, char *argv[])
    puts("White Space Removed");
 
    
-   puts("find links");
+   puts("Looking for links...");
    if ( (find_links(stripped_buff)) < 0)
       puts("Find Links Failed!");
    puts("\nFind Links Done");
