@@ -42,10 +42,12 @@ int main(int argc, char *argv[])
    // get the port.
    port = atoi(argv[2]);
 
+/*
    if ( strlen(argv[1]) < 2000 )
       hostname = argv[1];
    else
       printf("hostname too long!");
+*/
 
    // fill the sockaddr_in struct.
    name.sin_family = AF_INET;
@@ -116,7 +118,7 @@ int main(int argc, char *argv[])
 int find_links(char buff[])
 {
    char *pos = buff;
-   char link_marker[7] = "ahref=\"";
+   char link_marker[] = "ahref=\"";
    int i = 0;
 
    // pos is pointer to start of ahref=" string. Returns NULL if not found.
