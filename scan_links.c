@@ -1,6 +1,6 @@
 /*
-** showip.c -- show IP addresses for a host given on the command line
-*/
+ * Scan for broken links. 
+ */
 
 #include <ctype.h>         // tolower()
 #include <stdio.h>
@@ -11,13 +11,13 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <stdlib.h>        // atoi()
 
 /* Include headers */
 /*
 #include <stdio.h>         // printf() and standard i/o functions.
 #include <sys/socket.h>    // socket()
 #include <arpa/inet.h>     // uint16_t htons()
-#include <stdlib.h>        // atoi()
 #include <netinet/in.h>    // struct soccaddr_in
 #include <unistd.h>        // close() to close socket.
 #include <string.h>        // strlen(), strstr()
@@ -35,17 +35,21 @@ int main(int argc, char *argv[])
    int status;
    int sock = 0; // descriptor for our socket.
    char ipstr[INET6_ADDRSTRLEN];
+   //unsigned int port; // hold the port number likely 80 or 443.
 
-   if (argc != 2) {
-       fprintf(stderr,"usage: showip hostname\n");
+   if (argc != 3) {
+       fprintf(stderr,"usage: scan_links hostname port\n");
        return 1;
    }
+
+   // get the port.
+   //port = atoi(argv[2]);
 
    memset(&hints, 0, sizeof hints);
    hints.ai_family = AF_UNSPEC; // AF_INET or AF_INET6 to force version
    hints.ai_socktype = SOCK_STREAM;
 
-   if ((status = getaddrinfo(argv[1], NULL, &hints, &res)) != 0) {
+   if ((status = getaddrinfo(argv[1], argv[2], &hints, &res)) != 0) {
       fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(status));
       return 2;
    }
@@ -78,6 +82,14 @@ int main(int argc, char *argv[])
       puts("Socket Creation Failed!");
    puts("Socket Created");
 
+
+   // CONNECT TO SOCKET
+   if ( (connect(sock, res->ai_addr, res->ai_addrlen)) < 0)
+      puts("Connect Failed!");
+   puts("Connected");
+
+
+
    // CLOSE SOCKET
    if ( (close(sock)) < 0)
       puts("Close Socket Failed!");
@@ -109,8 +121,6 @@ int main(int argc, char *argv[])
    char server_reply[MAXBUFFER] = {0};
    char stripped_buff[MAXBUFFER] = {0};
 
-   // get the port.
-   port = atoi(argv[2]);
 
    //get_head = "HEAD / HTTP/1.1\r\nHost: www.example.com\r\n\r\n";
    get_msg = "GET / HTTP/1.1\r\nHost:www.openbsd.org\r\nConnection:close\r\n\r\n";
@@ -118,9 +128,6 @@ int main(int argc, char *argv[])
 
    sleep(1);
 
-   if ( (connect(sock, (struct sockaddr *)&name, sizeof(name))) < 0)
-      puts("Connect Failed!");
-   puts("Connected");
 
    if ( (send(sock, get_msg, strlen(get_msg), 0)) < 0)
       puts("Send Failed!");
