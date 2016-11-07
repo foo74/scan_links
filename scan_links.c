@@ -24,6 +24,9 @@
 #include <stddef.h>        // size_t type
 */
 
+/* Define constants */
+#define MAXBUFFER 200000
+
 
 /* Define functions */
 int remove_white_space(char from[], char to[]);
@@ -31,21 +34,33 @@ int find_links(char buff[]);
 
 int main(int argc, char *argv[])
 {
+   char http_request[3000];
+   char server_reply[MAXBUFFER]; // = {0};
+   char stripped_buff[MAXBUFFER]; // = {0};
    struct addrinfo hints, *res, *p;
-   int status;
-   int sock = 0; // descriptor for our socket.
    char ipstr[INET6_ADDRSTRLEN];
-   //unsigned int port; // hold the port number likely 80 or 443.
+   int status = 0;
+   int bytes_received = 0;             // how many bytes we receive from GET request.
+   int sock = 0;                       // descriptor for our socket.
+
+   // Zero out the arrays and structs.
+   memset(&http_request, 0, sizeof http_request);
+   memset(&server_reply, 0, sizeof server_reply);
+   memset(&stripped_buff, 0, sizeof stripped_buff);
+   memset(&hints, 0, sizeof hints);
+   memset(&ipstr, 0, sizeof ipstr);
 
    if (argc != 3) {
        fprintf(stderr,"usage: scan_links hostname port\n");
        return 1;
    }
 
-   // get the port.
-   //port = atoi(argv[2]);
+   //get_head = "HEAD / HTTP/1.1\r\nHost: www.example.com\r\n\r\n";
+   // BUILD THE HTTP GET REQUEST WITH HOSTNAME FROM COMMAND LINE
+   strncat(http_request, "GET / HTTP/1.1\r\nHost:", 1000);
+   strncat(http_request, argv[1], 1000);
+   strncat(http_request, "\r\nConnection:close\r\n\r\n", 1000);
 
-   memset(&hints, 0, sizeof hints);
    hints.ai_family = AF_UNSPEC; // AF_INET or AF_INET6 to force version
    hints.ai_socktype = SOCK_STREAM;
 
@@ -77,18 +92,38 @@ int main(int argc, char *argv[])
       printf("  %s: %s\n", ipver, ipstr);
    }
 
+   //sleep(1);
+
    // CREATE TO SOCKET
    if ( (sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol)) < 0)
       puts("Socket Creation Failed!");
    puts("Socket Created");
 
 
+   //sleep(1);
+
    // CONNECT TO SOCKET
    if ( (connect(sock, res->ai_addr, res->ai_addrlen)) < 0)
       puts("Connect Failed!");
    puts("Connected");
 
+   //sleep(1);
 
+   // SEND HTTP MESSAGE
+   if ( (send(sock, http_request, strlen(http_request), 0)) < 0)
+      puts("Send Failed!");
+   puts("Data Sent, ready to recv.");
+
+   //sleep(1);
+
+   // RECEIVE HTTP MESSAGE
+   while ( (bytes_received = recv(sock, server_reply, 200000, 0)) > 0)
+   {
+      puts("Data Received");
+      printf("Bytes Received = %d\n", bytes_received);
+   }
+
+   //sleep(1);
 
    // CLOSE SOCKET
    if ( (close(sock)) < 0)
@@ -97,72 +132,28 @@ int main(int argc, char *argv[])
 
    freeaddrinfo(res); // free the linked list
 
-   return 0;
-}
+   //sleep(1);
 
-
-
-
-
-
-/* Define constants */
-#define MAXBUFFER 200000
-
-
-/*
-int main(int argc, char *argv[])
-{
-   char *get_msg;
-   int sock;
-   int result;
-   unsigned int port;
-   struct sockaddr_in name;
-
-   char server_reply[MAXBUFFER] = {0};
-   char stripped_buff[MAXBUFFER] = {0};
-
-
-   //get_head = "HEAD / HTTP/1.1\r\nHost: www.example.com\r\n\r\n";
-   get_msg = "GET / HTTP/1.1\r\nHost:www.openbsd.org\r\nConnection:close\r\n\r\n";
-   
-
-   sleep(1);
-
-
-   if ( (send(sock, get_msg, strlen(get_msg), 0)) < 0)
-      puts("Send Failed!");
-   puts("Data Sent, ready to recv.");
-
-   sleep(1);
-
-   // Keep getting recv until we get all the bytes.
-   while ( (result = recv(sock, server_reply, 200000, 0)) > 0)
-   {
-      puts("Data Received");
-      printf("Bytes Received = %d\n", result);
-   }
-
-   sleep(1);
-
+   // REMOVE WHITE SPACE
    puts("Removing White Space");
    if ( (remove_white_space(server_reply, stripped_buff) < 0))
       puts("Remove White Space Failed!");
    puts("White Space Removed");
 
+   //sleep(1);
    
+   // LOOK FOR LINKS
    puts("Looking for links...");
    if ( (find_links(stripped_buff)) < 0)
       puts("Find Links Failed!");
    puts("\nFind Links Done");
 
-
    return 0;
 }
 
-*/
-
 int find_links(char buff[])
 {
+   //printf("buff = %s\n\n", buff);
    char *pos = buff;
    char link_marker[] = "ahref=\"";
    int i = 0;
@@ -183,14 +174,7 @@ int find_links(char buff[])
 
       printf("\n");
 
-      // start at 7 to get to start of link.
-      //for (i=7;pos[i] != '\"';i++)
-         //printf("%c", pos[i]);
    }
-
-/*
-   for ( i = 7; buff[i] != '\0' && i < MAXBUFFER; i++)
-*/
 
    return 0;
 }
@@ -205,7 +189,6 @@ int remove_white_space(char from[], char to[])
          from_pos++;
       else
       {
-         //printf("char is: %c and code is %d\n", from[from_pos], from[from_pos]);
          to[to_pos++] = tolower(from[from_pos++]);
       }
 
