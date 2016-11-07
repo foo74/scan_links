@@ -1,10 +1,19 @@
 /*
- * TODO
- * - create with host lookup.
+** showip.c -- show IP addresses for a host given on the command line
 */
 
-/* Include headers */
 #include <ctype.h>         // tolower()
+#include <stdio.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <unistd.h>        // close() to close socket.
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+
+/* Include headers */
+/*
 #include <stdio.h>         // printf() and standard i/o functions.
 #include <sys/socket.h>    // socket()
 #include <arpa/inet.h>     // uint16_t htons()
@@ -13,9 +22,8 @@
 #include <unistd.h>        // close() to close socket.
 #include <string.h>        // strlen(), strstr()
 #include <stddef.h>        // size_t type
+*/
 
-/* Define constants */
-#define MAXBUFFER 200000
 
 /* Define functions */
 int remove_white_space(char from[], char to[]);
@@ -23,8 +31,76 @@ int find_links(char buff[]);
 
 int main(int argc, char *argv[])
 {
+   struct addrinfo hints, *res, *p;
+   int status;
+   int sock = 0; // descriptor for our socket.
+   char ipstr[INET6_ADDRSTRLEN];
+
+   if (argc != 2) {
+       fprintf(stderr,"usage: showip hostname\n");
+       return 1;
+   }
+
+   memset(&hints, 0, sizeof hints);
+   hints.ai_family = AF_UNSPEC; // AF_INET or AF_INET6 to force version
+   hints.ai_socktype = SOCK_STREAM;
+
+   if ((status = getaddrinfo(argv[1], NULL, &hints, &res)) != 0) {
+      fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(status));
+      return 2;
+   }
+
+   printf("IP addresses for %s:\n\n", argv[1]);
+
+   for(p = res;p != NULL; p = p->ai_next) {
+      void *addr;
+      char *ipver;
+
+      // get the pointer to the address itself,
+      // different fields in IPv4 and IPv6:
+      if (p->ai_family == AF_INET) { // IPv4
+         struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
+         addr = &(ipv4->sin_addr);
+         ipver = "IPv4";
+      } else { // IPv6
+         struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)p->ai_addr;
+         addr = &(ipv6->sin6_addr);
+         ipver = "IPv6";
+      }
+
+      // convert the IP to a string and print it:
+      inet_ntop(p->ai_family, addr, ipstr, sizeof ipstr);
+      printf("  %s: %s\n", ipver, ipstr);
+   }
+
+   // CREATE TO SOCKET
+   if ( (sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol)) < 0)
+      puts("Socket Creation Failed!");
+   puts("Socket Created");
+
+   // CLOSE SOCKET
+   if ( (close(sock)) < 0)
+      puts("Close Socket Failed!");
+   puts("Socket Closed");
+
+   freeaddrinfo(res); // free the linked list
+
+   return 0;
+}
+
+
+
+
+
+
+/* Define constants */
+#define MAXBUFFER 200000
+
+
+/*
+int main(int argc, char *argv[])
+{
    char *get_msg;
-   //char *hostname;
    int sock;
    int result;
    unsigned int port;
@@ -33,33 +109,12 @@ int main(int argc, char *argv[])
    char server_reply[MAXBUFFER] = {0};
    char stripped_buff[MAXBUFFER] = {0};
 
-   if ( argc != 3 )
-   {
-      printf("Usage: scan_links <server_ip> <port>\n");
-      return -1;
-   }
-
    // get the port.
    port = atoi(argv[2]);
-
-/*
-   if ( strlen(argv[1]) < 2000 )
-      hostname = argv[1];
-   else
-      printf("hostname too long!");
-*/
-
-   // fill the sockaddr_in struct.
-   name.sin_family = AF_INET;
-   name.sin_port = htons(port);
-   inet_aton(argv[1], &name.sin_addr);
 
    //get_head = "HEAD / HTTP/1.1\r\nHost: www.example.com\r\n\r\n";
    get_msg = "GET / HTTP/1.1\r\nHost:www.openbsd.org\r\nConnection:close\r\n\r\n";
    
-   if ( (sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-      puts("Socket Creation Failed!");
-   puts("Socket Created");
 
    sleep(1);
 
@@ -81,9 +136,6 @@ int main(int argc, char *argv[])
    }
 
    sleep(1);
-   if ( (close(sock)) < 0)
-      puts("Close Socket Failed!");
-   puts("Socket Closed");
 
    puts("Removing White Space");
    if ( (remove_white_space(server_reply, stripped_buff) < 0))
@@ -96,24 +148,11 @@ int main(int argc, char *argv[])
       puts("Find Links Failed!");
    puts("\nFind Links Done");
 
-/*
-   printf("\nFirst 1000 bytes\n\n");
-   for (i=0; i<1000; i++)
-      printf("%c", server_reply[i]);
-
-   printf("\n\nTotal bytes received: %lu\n\n", strlen(server_reply));
-
-
-
-
-   remove_white_space(server_reply, stripped_buff);
-
-   printf("\n\n\n------END------\n\n");
-*/
 
    return 0;
 }
 
+*/
 
 int find_links(char buff[])
 {
