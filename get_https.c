@@ -13,6 +13,7 @@
 #include <arpa/inet.h>     // uint16_t htons()
 #include <netinet/in.h>    // struct sockaddr_in
 #include <stdlib.h>        // atoi()
+#include <openssl/ssl.h>   // For https comms
 
 /* Define constants */
 #define MAXBUFFER 2097152  // use a power of 2 for performance reasons
@@ -98,6 +99,11 @@ int main(int argc, char *argv[])
    puts("Connected");
 
    //sleep(1);
+
+// INIT SSL
+SSL_load_error_strings();
+SSL_library_init();
+SSL_CTX *ssl_ctx = SSL_CTX_new (SSLv23_client_method());
 
    // SEND HTTP MESSAGE
    if ( (send(sock, http_request, strlen(http_request), 0)) < 0)
