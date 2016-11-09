@@ -105,15 +105,23 @@ SSL_load_error_strings();
 SSL_library_init();
 SSL_CTX *ssl_ctx = SSL_CTX_new (SSLv23_client_method());
 
+// CREATE SSL AND ATTACH TO SOCKET
+SSL *conn = SSL_new(ssl_ctx);
+SSL_set_fd(conn, sock);
+
+int sslwork = 0;
+sslwork = SSL_connect(conn);
+printf("sslwork = %d\n", sslwork);
+
    // SEND HTTP MESSAGE
-   if ( (send(sock, http_request, strlen(http_request), 0)) < 0)
+if ( ( SSL_write(conn, http_request, strlen(http_request))) < 0)
       puts("Send Failed!");
    puts("Data Sent, ready to recv.");
 
    //sleep(1);
 
    // RECEIVE HTTP MESSAGE
-   while ( (bytes_received = recv(sock, server_reply + recv_index, MAXBUFFER-recv_index, 0)) > 0)
+while ( (bytes_received = SSL_read(conn, server_reply + recv_index, MAXBUFFER-recv_index)) > 0)
    {
       recv_index += bytes_received;
       puts("Data Received");
