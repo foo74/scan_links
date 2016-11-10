@@ -13,6 +13,7 @@
 #include <arpa/inet.h>     // uint16_t htons()
 #include <netinet/in.h>    // struct sockaddr_in
 #include <stdlib.h>        // atoi()
+#include <openssl/ssl.h>   // For https comms
 
 /* Define constants */
 #define MAXBUFFER 2097152  // use a power of 2 for performance reasons
@@ -20,6 +21,9 @@
 /* Define functions */
 int remove_white_space(char from[], char to[]);
 int find_links(char buff[]);
+
+const char *port80 = "80";
+const char *port443 = "443";
 
 int main(int argc, char *argv[])
 {
@@ -32,6 +36,7 @@ int main(int argc, char *argv[])
    int bytes_received = 0;             // how many bytes we receive from GET request.
    int sock = 0;                       // descriptor for our socket.
    int recv_index = 0;
+   char *port;
 
    // Zero out the arrays and structs.
    memset(&http_request, 0, sizeof http_request);
@@ -53,8 +58,10 @@ int main(int argc, char *argv[])
 
    hints.ai_family = AF_UNSPEC; // AF_INET or AF_INET6 to force version
    hints.ai_socktype = SOCK_STREAM;
+   port = argv[2];
 
-   if ((status = getaddrinfo(argv[1], argv[2], &hints, &res)) != 0) {
+
+   if ((status = getaddrinfo(argv[1], port, &hints, &res)) != 0) {
       fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(status));
       return 2;
    }
@@ -82,39 +89,62 @@ int main(int argc, char *argv[])
       printf("  %s: %s\n", ipver, ipstr);
    }
 
-   //sleep(1);
-
-   // CREATE TO SOCKET
+   // CREATE SOCKET
    if ( (sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol)) < 0)
       puts("Socket Creation Failed!");
    puts("Socket Created");
-
-
-   //sleep(1);
 
    // CONNECT TO SOCKET
    if ( (connect(sock, res->ai_addr, res->ai_addrlen)) < 0)
       puts("Connect Failed!");
    puts("Connected");
 
-   //sleep(1);
-
-   // SEND HTTP MESSAGE
-   if ( (send(sock, http_request, strlen(http_request), 0)) < 0)
-      puts("Send Failed!");
-   puts("Data Sent, ready to recv.");
-
-   //sleep(1);
-
-   // RECEIVE HTTP MESSAGE
-   while ( (bytes_received = recv(sock, server_reply + recv_index, MAXBUFFER-recv_index, 0)) > 0)
+   if ( (strcmp(port, port443)) == 0 )
    {
-      recv_index += bytes_received;
-      puts("Data Received");
-      printf("Bytes Received = %d\n", bytes_received);
-   }
+      // INIT SSL
+      SSL_load_error_strings();
+      SSL_library_init();
+      SSL_CTX *ssl_ctx = SSL_CTX_new (SSLv23_client_method());
 
-   //sleep(1);
+      // CREATE SSL AND ATTACH TO SOCKET
+      SSL *conn = SSL_new(ssl_ctx);
+      if ( (SSL_set_fd(conn, sock)) != 1)
+         puts("SSL Set File Descriptor Failed!");
+      puts("SSL Set File Descriptor");
+
+      // CONNECT SSL
+      if ( (SSL_connect(conn)) != 1)
+         puts("SSL Connect Failed!");
+      puts("SSL Connected");
+
+      // SEND HTTP MESSAGE
+      if ( (SSL_write(conn, http_request, strlen(http_request))) < 0)
+         puts("Send Failed!");
+      puts("Data Sent, ready to recv.");
+
+      // RECEIVE HTTP MESSAGE
+      while ( (bytes_received = SSL_read(conn, server_reply + recv_index, MAXBUFFER-recv_index)) > 0)
+      {
+         recv_index += bytes_received;
+         puts("Data Received");
+         printf("Bytes Received = %d\n", bytes_received);
+      }
+   }
+   else if ( (strcmp(port, port80)) == 0 )
+   {
+      // SEND HTTP MESSAGE
+      if ( (send(sock, http_request, strlen(http_request), 0)) < 0)
+         puts("Send Failed!");
+      puts("Data Sent, ready to recv.");
+
+      // RECEIVE HTTP MESSAGE
+      while ( (bytes_received = recv(sock, server_reply + recv_index, MAXBUFFER-recv_index, 0)) > 0)
+      {
+         recv_index += bytes_received;
+         puts("Data Received");
+         printf("Bytes Received = %d\n", bytes_received);
+      }
+   }
 
    // CLOSE SOCKET
    if ( (close(sock)) < 0)
@@ -123,16 +153,12 @@ int main(int argc, char *argv[])
 
    freeaddrinfo(res); // free the linked list
 
-   //sleep(1);
-
    // REMOVE WHITE SPACE
    puts("Removing White Space");
    if ( (remove_white_space(server_reply, stripped_buff) < 0))
       puts("Remove White Space Failed!");
    puts("White Space Removed");
 
-   //sleep(1);
-   
    // LOOK FOR LINKS
    puts("Looking for links...");
    if ( (find_links(stripped_buff)) < 0)
