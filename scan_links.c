@@ -1,5 +1,5 @@
 /*
- * Scan for broken links. 
+ * Scan for broken links. Supports HTTP (port 80) and HTTPS (port 443).
  */
 
 /* Include headers */
@@ -19,6 +19,7 @@
 #define MAXBUFFER 2097152  // use a power of 2 for performance reasons
 
 /* Define functions */
+int get_links(int argc, char *argv[]);
 int remove_white_space(char from[], char to[]);
 int find_links(char buff[]);
 
@@ -26,6 +27,13 @@ const char *port80 = "80";
 const char *port443 = "443";
 
 int main(int argc, char *argv[])
+{
+   get_links(argc, argv);
+
+   return 0;
+}
+
+int get_links(int argc, char *argv[])
 {
    char http_request[3000];
    char server_reply[MAXBUFFER];
@@ -46,7 +54,8 @@ int main(int argc, char *argv[])
    memset(&ipstr, 0, sizeof ipstr);
 
    // If hostname and port not specified then show usage.
-   if (argc != 3) {
+   if (argc != 3) 
+   {
        fprintf(stderr,"usage: scan_links hostname port\n");
        return 1;
    }
@@ -61,14 +70,16 @@ int main(int argc, char *argv[])
    port = argv[2];
 
 
-   if ((status = getaddrinfo(argv[1], port, &hints, &res)) != 0) {
+   if ((status = getaddrinfo(argv[1], port, &hints, &res)) != 0) 
+   {
       fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(status));
       return 2;
    }
 
    printf("IP addresses for %s:\n\n", argv[1]);
 
-   for(p = res;p != NULL; p = p->ai_next) {
+   for(p = res;p != NULL; p = p->ai_next) 
+   {
       void *addr;
       char *ipver;
 
@@ -168,6 +179,7 @@ int main(int argc, char *argv[])
    return 0;
 }
 
+// Find links in the HTTP.
 int find_links(char buff[])
 {
 //printf("buff=%s\n\n", buff);
@@ -190,12 +202,12 @@ int find_links(char buff[])
       }
 
       printf("\n");
-
    }
 
    return 0;
 }
 
+// Remove white space so results are easier to parse.
 int remove_white_space(char from[], char to[])
 {
    int from_pos = 0;
