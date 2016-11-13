@@ -22,7 +22,7 @@
 int get_html(int argc, char *argv[]);
 int remove_white_space(char from[], char to[]);
 int find_links(char buff[]);
-int check_link(char *link);
+int check_link(char *host, char *port, char *link);
 
 const char *port80 = "80";
 const char *port443 = "443";
@@ -30,59 +30,51 @@ const char *port443 = "443";
 int main(int argc, char *argv[])
 {
    // If hostname and port not specified then show usage.
-/*
    if (argc != 3) 
    {
        fprintf(stderr,"usage: scan_links hostname port\n");
        return 1;
    }
-*/
 
    //get_html(argc, argv);
-   check_link("/60.html");
+   check_link(argv[1], argv[2], "/60.html");
 
    return 0;
 }
 
-int check_link(char *link)
+int check_link(char *host, char *port, char *link)
 {
    char http_request[5000];
    char server_reply[MAXBUFFER];
-   //char stripped_buff[MAXBUFFER];
    struct addrinfo hints, *res, *p;
    char ipstr[INET6_ADDRSTRLEN];
    int status = 0;                     // status of getaddrinfo()
    int bytes_received = 0;             // how many bytes we receive from GET request.
    int sock = 0;                       // descriptor for our socket.
    int recv_index = 0;
-   //char *port;
 
    // Zero out the arrays and structs.
    memset(&http_request, 0, sizeof http_request);
    memset(&server_reply, 0, sizeof server_reply);
-   //memset(&stripped_buff, 0, sizeof stripped_buff);
    memset(&hints, 0, sizeof hints);
 
    // BUILD THE HTTP GET REQUEST WITH HOSTNAME FROM COMMAND LINE
    strncat(http_request, "HEAD ", 1000);
    strncat(http_request, link, 1000);
    strncat(http_request, " HTTP/1.1\r\nHost:", 1000);
-   strncat(http_request, "www.openbsd.org", 1000);
+   strncat(http_request, host, 1000);
    strncat(http_request, "\r\nConnection:close\r\n\r\n", 1000);
 
    hints.ai_family = AF_UNSPEC; // AF_INET or AF_INET6 to force version
    hints.ai_socktype = SOCK_STREAM;
 
-   //port = "80";
-
-   if ((status = getaddrinfo("www.openbsd.org", "443", &hints, &res)) != 0) 
+   if ((status = getaddrinfo(host, port, &hints, &res)) != 0) 
    {
       fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(status));
       return 2;
    }
 
-   //printf("IP addresses for %s:\n\n", argv[1]);
-   printf("IP addresses for www.openbsd.org");
+   printf("IP addresses for %s:\n\n", host);
 
    for(p = res;p != NULL; p = p->ai_next) 
    {
@@ -141,7 +133,6 @@ int check_link(char *link)
    while ( (bytes_received = SSL_read(conn, server_reply + recv_index, MAXBUFFER-recv_index)) > 0)
    {
       recv_index += bytes_received;
-      puts("Data Received");
       printf("Bytes Received = %d\n", bytes_received);
    }
 
@@ -153,6 +144,10 @@ int check_link(char *link)
    freeaddrinfo(res); // free the linked list
 
    printf("results is: \n\n%s\n\n", server_reply);
+   if ( strstr(server_reply, "200 OK") )
+      puts("FOUND 200 OK!");
+   else
+      puts("DID NOT FIND IT.");
 
    return 0;
 }
