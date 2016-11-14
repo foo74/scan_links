@@ -5,6 +5,7 @@ scan_links: scan_links.c
 
 run:
 	./scan_links www.openbsd.org 443
+	#./scan_links www.example.com 80
 
 debug:
 	gdb scan_links www.example.com 80

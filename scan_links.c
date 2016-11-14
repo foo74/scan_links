@@ -37,7 +37,11 @@ int main(int argc, char *argv[])
    }
 
    //get_html(argc, argv);
-   check_link(argv[1], argv[2], "/60.html");
+   //check_link(argv[1], argv[2], "/60.html");
+   if ( (check_link(argv[1], argv[2], "/")) == 1 )
+      puts("LINK OK");
+   else
+      puts("INVALID LINK!");
 
    return 0;
 }
@@ -108,32 +112,50 @@ int check_link(char *host, char *port, char *link)
       puts("Connect Failed!");
    puts("Connected");
 
-   // INIT SSL
-   SSL_load_error_strings();
-   SSL_library_init();
-   SSL_CTX *ssl_ctx = SSL_CTX_new (SSLv23_client_method());
-
-   // CREATE SSL AND ATTACH TO SOCKET
-   SSL *conn = SSL_new(ssl_ctx);
-   if ( (SSL_set_fd(conn, sock)) != 1)
-      puts("SSL Set File Descriptor Failed!");
-   puts("SSL Set File Descriptor");
-
-   // CONNECT SSL
-   if ( (SSL_connect(conn)) != 1)
-      puts("SSL Connect Failed!");
-   puts("SSL Connected");
-
-   // SEND HTTP MESSAGE
-   if ( (SSL_write(conn, http_request, strlen(http_request))) < 0)
-      puts("Send Failed!");
-   puts("Data Sent, ready to recv.");
-
-   // RECEIVE HTTP MESSAGE
-   while ( (bytes_received = SSL_read(conn, server_reply + recv_index, MAXBUFFER-recv_index)) > 0)
+   if ( (strcmp(port, port443)) == 0 )
    {
-      recv_index += bytes_received;
-      printf("Bytes Received = %d\n", bytes_received);
+      // INIT SSL
+      SSL_load_error_strings();
+      SSL_library_init();
+      SSL_CTX *ssl_ctx = SSL_CTX_new (SSLv23_client_method());
+
+      // CREATE SSL AND ATTACH TO SOCKET
+      SSL *conn = SSL_new(ssl_ctx);
+      if ( (SSL_set_fd(conn, sock)) != 1)
+         puts("SSL Set File Descriptor Failed!");
+      puts("SSL Set File Descriptor");
+
+      // CONNECT SSL
+      if ( (SSL_connect(conn)) != 1)
+         puts("SSL Connect Failed!");
+      puts("SSL Connected");
+
+      // SEND HTTP MESSAGE
+      if ( (SSL_write(conn, http_request, strlen(http_request))) < 0)
+         puts("Send Failed!");
+      puts("Data Sent, ready to recv.");
+
+      // RECEIVE HTTP MESSAGE
+      while ( (bytes_received = SSL_read(conn, server_reply + recv_index, MAXBUFFER-recv_index)) > 0)
+      {
+         recv_index += bytes_received;
+         printf("Bytes Received = %d\n", bytes_received);
+      }
+   }
+   else if ( (strcmp(port, port80)) == 0 )
+   {
+      // SEND HTTP MESSAGE
+      if ( (send(sock, http_request, strlen(http_request), 0)) < 0)
+         puts("Send Failed!");
+      puts("Data Sent, ready to recv.");
+
+      // RECEIVE HTTP MESSAGE
+      while ( (bytes_received = recv(sock, server_reply + recv_index, MAXBUFFER-recv_index, 0)) > 0)
+      {
+         recv_index += bytes_received;
+         puts("Data Received");
+         printf("Bytes Received = %d\n", bytes_received);
+      }
    }
 
    // CLOSE SOCKET
@@ -145,9 +167,7 @@ int check_link(char *host, char *port, char *link)
 
    printf("results is: \n\n%s\n\n", server_reply);
    if ( strstr(server_reply, "200 OK") )
-      puts("FOUND 200 OK!");
-   else
-      puts("DID NOT FIND IT.");
+      return 1;
 
    return 0;
 }
