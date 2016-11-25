@@ -76,3 +76,6 @@ int main(int argc, char **argv, char** envp)
 
    return 0;
 }
+
+
+install -o www -g www -m 0500 <binary> /var/www/<cgi-directory>
