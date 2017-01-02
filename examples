@@ -1,0 +1,81 @@
+#include <stdlib.h>
+#include <stdio.h>
+
+int main(void)
+{
+   puts("Status: 200 OK\r");
+   puts("Content-Type: text/html\r");
+   puts("\r");
+   puts("YOU, YOU ");
+
+   return(EXIT_SUCCESS);
+}
+
+
+#include <stdio.h>
+#include <stdlib.h>
+
+char evars[20][80]={"SERVER_SOFTWARE", "SERVER_NAME", "SERVER_PROTOCOL", 
+                    "SERVER_PORT",
+                    "GATEWAY_INTERFACE", "REQUEST_METHOD", 
+                    "PATH_INFO", "PATH_TRANSLATED", "SCRIPT_NAME", 
+                    "QUERY_STRING", 
+                    "REMOTE_HOST", "REMOTE_ADDR", "REMOTE_USER", 
+                    "REMOTE_IDENT",
+                    "AUTH_TYPE", "CONTENT_TYPE", "CONTENT_LENGTH", 
+                    "HTTP_ACCEPT", "HTTP_USER_AGENT", "HTTP_REFERER"};
+
+
+int main(void) {
+    const int numvars = 20;
+    int i;
+  
+    printf("Content-type: text/plain\n\n");
+    for (i=0;i<numvars;i++) printf("%s = %s\n", evars[i], getenv(evars[i]));
+    return 0;
+}
+
+
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(int argc, char **argv, char** envp)
+{
+   char** env;
+
+   puts("Status: 200 OK\r");
+   puts("Content-Type: text/html\r");
+   puts("\r");
+
+   puts("<!DOCTYPE html><html><body><h1>YOU</h1> <p>You , .</p>");
+   puts("<form action=\"whoami\" method=\"get\">IP:<input type=\"text\" name=\"foo\"><input type=\"submit\" value=\"Go\"></form>");
+
+   for (env = envp; *env != 0; env++)
+   {
+      char* thisEnv = *env;
+      printf("<p>%s</p>", thisEnv);    
+   }
+
+   puts("</body></html>");
+
+   return(EXIT_SUCCESS);
+}
+
+
+#include <stdio.h>
+
+int main(int argc, char **argv, char** envp)
+{
+  char** env;
+
+  for (env = envp; *env != 0; env++)
+  {
+    char* thisEnv = *env;
+    printf("%s\n", thisEnv);    
+  }
+
+   return 0;
+}
+
+
+install -o www -g www -m 0500 <binary> /var/www/<cgi-directory>
