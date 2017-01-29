@@ -29,14 +29,15 @@
 #include <netdb.h>
 #include <arpa/inet.h>     // uint16_t htons()
 #include <netinet/in.h>    // struct sockaddr_in
-#include <stdlib.h>        // atoi()
+#include <stdlib.h>        // atoi() and exit()
 #include <openssl/ssl.h>   // For https comms
 
 /* Define constants */
 #define MAXBUFFER 2097152  // use a power of 2 for performance reasons
 
 /* Define functions */
-int get_html(int argc, char *argv[]);
+//int get_html(int argc, char *argv[]);
+int get_html();
 int remove_white_space(char from[], char to[]);
 int find_links(char buff[]);
 int check_link(char *host, char *port, char *link);
