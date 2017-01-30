@@ -1,5 +1,3 @@
-/* scan_links.h v0.01 2016/11/13 */
-
 /*
  * Copyright (c) 2016 - 2016, Foo <foo@openbsd.org>
  *
@@ -16,8 +14,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef _SCAN_LINKS_H
-#define _SCAN_LINKS_H
+#ifndef _GET_LINKS_H
+#define _GET_LINKS_H
 
 /* Include headers */
 #include <stdio.h>         // printf() and standard i/o functions
@@ -32,17 +30,10 @@
 #include <stdlib.h>        // atoi() and exit()
 #include <openssl/ssl.h>   // For https comms
 
-/* Define constants */
-#define MAXBUFFER 2097152  // use a power of 2 for performance reasons
-
 /* Define functions */
-//int get_html(int argc, char *argv[]);
-int get_html();
+//int get_html();
 int remove_white_space(char from[], char to[]);
 int find_links(char buff[]);
 int check_link(char *host, char *port, char *link);
-
-const char *port80 = "80";
-const char *port443 = "443";
 
 #endif

@@ -1,0 +1,19 @@
+foo@foo-galaxy:~/programming/scan_links$ telnet www.openbsd.org 80
+Trying 129.128.5.194...
+Connected to www.openbsd.org.
+Escape character is '^]'.
+HEAD /60.html HTTP/1.1
+host:www.openbsd.org
+connection:close
+
+HTTP/1.1 200 OK
+Connection: close
+Content-Length: 47272
+Content-Type: text/html
+Date: Mon, 30 Jan 2017 04:09:00 GMT
+Last-Modified: Sun, 16 Oct 2016 19:28:33 GMT
+Server: OpenBSD httpd
+
+Connection closed by foreign host.
+foo@foo-galaxy:~/programming/scan_links$ 
+

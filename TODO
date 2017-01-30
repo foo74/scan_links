@@ -1,0 +1,4 @@
+Add hostname box, button to submit job.
+This creates a [use arc4random() ]GUID and a link with a message to check status shortly. This page has a message still scanning.
+
+Future is to submit this as a scheduled job. Then email the report or a link to the report.
