@@ -14,7 +14,7 @@ check_link: check_link.c
 	gcc check_link.c -c -Wall -g
 
 run:
-	./scan_links www.openbsd.org 80
+	./scan_links www.openbsd.org 443
 
 debug:
 	gdb scan_links www.example.com 80
