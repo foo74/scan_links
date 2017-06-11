@@ -1,1 +1,0 @@
-install -o www -g www -m 0500 foodoo /var/www/cgi-bin
